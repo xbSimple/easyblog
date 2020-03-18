@@ -255,10 +255,10 @@
                         </el-row>
                         <el-row>
                             <el-button type="text" @click="setFocus(comment)" style="font-size: 1px;padding-left: 10px">回复</el-button>
-                            <!--<el-button :id="forId1(index)" @click="displayComment(index)"  style="margin-left: 10px;font-size: 2px" type="text">点击展开更多<i class="el-icon-bottom"></i></el-button>-->
+                            <el-button :id="forId1(comment.id)" @click="displayComment(comment.id)"  style="margin-left: 10px;font-size: 2px" type="text">点击展开更多<i class="el-icon-bottom"></i></el-button>
                         </el-row>
-                        <comment :id="index" :comments="comment.commentChildren"></comment>
-                        <!--<el-button :id="forId2(index)" @click="hideComment(index)" class="button-display-none" style="margin-left: 10px;font-size: 2px" type="text">点击隐藏<i class="el-icon-top"></i></el-button class>-->
+                        <comment :id="comment.id" class="button-display-none" :comments="comment.commentChildren"></comment>
+                        <el-button :id="forId2(comment.id)" @click="hideComment(comment.id)" class="button-display-none" style="margin-left: 10px;font-size: 2px" type="text">点击隐藏<i class="el-icon-top"></i></el-button class>
                     </el-col>
                 </el-row>
             </div>`,
@@ -293,10 +293,14 @@
                 return "bd-"+index;
             },
             displayComment(index){
-                $('#'+index).removeClass('button-display-none');
+                $('#'+index).show();
+                $('#bn-'+index).hide();
+                $('#bd-'+index).show();
             },
             hideComment(index){
-
+                $('#'+index).hide();
+                $('#bn-'+index).show();
+                $('#bd-'+index).hide();
             }
         }
     });
