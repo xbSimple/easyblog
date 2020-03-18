@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>小兵的博客</title>
+
+
+</head>
+<!-- 引入样式 -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<link rel="stylesheet" href="../static/css/mycss.css">
+
+<body background="../static/images/bg.png">
+<div id="app">
+<el-container>
+<!--页头-->
+    <el-header>
+        <el-row class="bg-headerfooter">
+            <el-col :xs="24" :xl="4"><div class="grid-content bg-headerfooter"  style="height: 50px;text-align: center;padding-top: 10px">
+                <font size="5px" color="#808080"><b>Blog</b></font>
+                </div>
+            </el-col>
+            <el-col :xs="24" :xl="12"><div class="bg-headerfooter" style="height: 50px;">
+                <el-menu :default-active="activeIndex" class="el-menu-demo bg-headerfooter" mode="horizontal" @select="handleSelect">
+                    <el-menu-item index="/index"><i class="el-icon-s-home"></i>首页</el-menu-item>
+                    <el-menu-item index="/types"><i class="el-icon-menu"></i>分类</el-menu-item>
+                    <el-menu-item index="/tags"><i class="el-icon-price-tag"></i>标签</el-menu-item>
+                    <el-menu-item index="/archives"><i class="el-icon-document"></i>归档</el-menu-item>
+                    <el-menu-item index="/about"><i class="el-icon-info"></i>关于我</el-menu-item>
+                </el-menu>
+            </div>
+            </el-col>
+            <el-col :xs="24" :xl="8"  ><div class="grid-content bg-headerfooter" style="height: 50px;text-align: center;padding-top: 10px">
+                <el-autocomplete
+                        v-model="state"
+                        :fetch-suggestions="querySearchAsync"
+                        placeholder="该功能目前无法使用"
+                        @select="handleSearch"
+                        class="grid-content bg-black"
+                        suffix-icon="el-icon-search"
+                        @change="search"
+                ></el-autocomplete>
+            </div></el-col>
+        </el-row>
+    </el-header>
+
+    <!--中间-->
+    <el-main  style="padding-top: 150px">
+
+        <el-row :gutter="30">
+            <!--博客部分-->
+            <el-col :xs="24" :xl="{span: 14, offset: 2}" style="padding-bottom: 50px">
+                <el-container class="bg-papayawhip" style="border: 1px solid grey">
+                    <el-header style="border: 1px solid grey;padding-top: 10px">
+                        <font size="5px" color="#808080" ><b>博客</b></font>
+                        <span style="float: right">共<font size="5px" color="orange">{{blogNums}}</font>篇</span>
+                    </el-header>
+                    <el-main style="border: 1px solid grey">
+                        <div v-for="item in blogData">
+                            <el-row :gutter="10">
+                                <el-col :xs="24" :xl="16">
+                                    <h3><el-link :underline="false" @click="openBlog(item.id)" target="_blank" style="color: black;font-size: 20px">{{item.title}}</el-link></h3>
+                                    <p>{{item.content | htmlToText}}......</p>
+                                </el-col>
+                                <el-col :xs="12" :xl="8">
+                                    <img :src="item.firstPicture" alt="" style="border-radius: 4px;width: 300px;height: 200px">
+                                </el-col>
+                            </el-row>
+                            <el-row>
+                                <el-col :xs="24" :xl="16">
+                                    <div  style="text-align: center;">
+                                        <img src="https://unsplash.it/100/100?image=1005" alt="" style="border-radius: 4px;width: 30px;float: left">
+                                        <div class="grid-content" style="float: left;padding-left: 10px;padding-top: 5px;font-size: 1px"><b>{{item.nickName}}</b></div>
+                                        <div class="grid-content" style="float: left;padding-left: 10px;padding-top: 5px;font-size: 1px"><i class="el-icon-date"></i>{{item.createTime | formatDate}}</div>
+                                        <div class="grid-content" style="float: left;padding-left: 10px;padding-top: 5px;font-size: 1px"><i class="el-icon-view"></i>{{item.views}}</div>
+                                        <el-tag type="success" size="small" style="float: right;">{{item.typeName}}</el-tag>
+                                    </div>
+                                </el-col>
+                            </el-row>
+                            <el-divider></el-divider>
+                        </div>
+                        <el-row>
+                            <el-button-group style="float: right">
+                                <el-button type="success" plain style="margin: 5px" icon="el-icon-arrow-left" @click="blogPage((pageNum-1)>0?pageNum-1:1)">上一页</el-button>
+                                <el-button type="success" plain style="margin: 5px" @click="blogPage((pageNum+1)<Math.floor(blogNums/10)+(blogNums%10==0?1:2)?(pageNum+1):Math.floor(blogNums/10)+(blogNums%10==0?0:1))">下一页<i class="el-icon-arrow-right el-icon--right"></i></el-button>
+                            </el-button-group>
+                        </el-row>
+                    </el-main>
+                </el-container>
+            </el-col>
+
+            <el-col :xs="24" :xl="6">
+                <!--分类部分-->
+                <el-container class="bg-papayawhip" style="border: 1px solid grey">
+                    <el-header style="border: 1px solid grey;border-bottom-color: green;padding-top: 20px;">
+                        <span><i class="el-icon-menu"></i>分类</span>
+                        <a href="/types" style="float: right;font-size: 2px;text-decoration: none;color: black">more<i class="el-icon-d-arrow-right"></i></a>
+                    </el-header>
+                    <el-main style="border: 1px solid grey">
+                        <el-container direction="vertical">
+                            <el-row  v-for="(type,index) in TypeAndNums" :key="index"  class="grid-content" style="border: 1px solid grey;border-radius: 4px;width: 380px;padding: 5px">
+                                <el-link :underline="false" @click="goType(type.typeName)" style="float: left;font-size: 15px;margin-top: 7px"><b>{{type.typeName}}</b></el-link><el-tag type="success" style="float: right;margin-right: 30px">{{type.nums}}</el-tag>
+                            </el-row>
+                        </el-container>
+                    </el-main>
+                </el-container>
+
+                <!--标签部分-->
+                <el-container class="bg-papayawhip" style="border: 1px solid grey;margin-top: 50px">
+                    <el-header style="border: 1px solid grey;border-bottom-color: green;padding-top: 20px;">
+                        <span><i class="el-icon-price-tag"></i>标签</span>
+                        <a href="/tags" style="float: right;font-size: 2px;text-decoration: none;color: black">more<i class="el-icon-d-arrow-right"></i></a>
+                    </el-header>
+                    <el-main style="border: 1px solid grey">
+                        <el-container>
+                            <el-main class="grid-content" style="width: 380px;">
+                                <el-tag @click="goTag(tags.tagName)" v-for="(tags,index) in TagAndNums" :key="index"  type="success" size="medium"  style="margin: 3px">{{tags.tagName==null?'无标签':tags.tagName}} {{tags.nums}}</el-tag>
+                            </el-main>
+                        </el-container>
+                    </el-main>
+                </el-container>
+
+                <!--最新推荐-->
+                <el-container class="bg-papayawhip" style="border: 1px solid grey;margin-top: 50px">
+                    <el-header style="border: 1px solid grey;border-bottom-color: green;padding-top: 20px;">
+                        <span><i class="el-icon-collection-tag"></i>最新推荐</span>
+                    </el-header>
+                    <el-main style="border: 1px solid grey">
+                        <el-container direction="vertical">
+                            <el-main style="border-bottom: 1px solid grey" v-for="(blog,index) in recommendBlog" :key="index" >
+                                <el-link :underline="false" @click="openBlog(blog.id)"  target="_blank" style="text-decoration: none;color: black;font-size: 15px">{{blog.title}}</el-link>
+                            </el-main>
+                        </el-container>
+                    </el-main>
+                </el-container>
+
+                <el-divider></el-divider>
+
+                <el-container>
+                    <el-main style="text-align: center">
+                        <h4>扫码关注我</h4>
+                        <el-image
+                                style="width: 250px; height: 250px;"
+                                :src="wechatImage"
+                                :fit="fit"></el-image>
+                    </el-main>
+                </el-container>
+            </el-col>
+            <el-col :xs="0" :xl="2">
+
+            </el-col>
+        </el-row>
+    </el-main>
+
+    <!--底部-->
+    <el-footer>
+        <el-row :xs="24" :xl="5" class="bg-headerfooter" style="padding-top: 50px">
+            <el-col :xs="24" :xl="5" style="text-align: center">
+                <el-image
+                        style="width: 200px; height: 200px"
+                        :src="wechatImage"
+                        :fit="fit"></el-image>
+            </el-col>
+            <el-col :xs="24" :xl="5" style="text-align: center;color: white">
+                <h4>最新博客</h4>
+                <el-container  direction="vertical">
+                    <el-link :underline="false" @click="openBlog(blog.id)"  target="_blank" style="text-decoration: none;color: white" v-for="blog in newBlog">{{blog.title}}</el-link>
+                </el-container>
+            </el-col>
+            <el-col :xs="24" :xl="5" style="text-align: center;color: white">
+                <h4>联系我</h4>
+                <el-container  direction="vertical">
+                    <span style="font-size: 3px">Email:{{email}}</span>
+                    <span style="font-size: 3px">QQ:{{qqnumber}}</span>
+                </el-container>
+            </el-col>
+            <el-col :xs="24" :xl="9" style="text-align: center;color: white;padding-right: 50px;padding-left: 50px">
+                <h4>最新博客</h4>
+                <p>这是我的个人博客，会分享关于编程、写作、思考相关的任何内容，希望可以给来到这儿的人有所帮助...</p>
+            </el-col>
+
+        </el-row>
+
+        <el-row class="bg-headerfooter" style="padding-bottom: 30px;text-align: center;color: white">
+            <el-divider ></el-divider>
+            <strong>Copyright &copy; 2020-2020 xiaobin.</strong> All rights reserved.
+        </el-row>
+    </el-footer>
+</el-container>
+</div>
+</body>
+<script src="../static/js/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="../static/js/axios.js"></script>
+
+<script>
+    new Vue({
+        el:'#app',
+        data(){
+            return {
+                activeIndex: '/index',
+                activeIndex2: '1',
+                state: '',
+                timeout:  null,
+                restaurants:[],
+                blogNums: 10,
+                wechatImage: 'https://unsplash.it/400/400?image=1005',
+                fit:'fill',
+                blogData:[],
+                email:'2217728002@qq.com',
+                qqnumber:2217728002,
+                TypeAndNums:[],
+                TagAndNums:[],
+                recommendBlog:[],
+                newBlog:[],
+                pageNum:1
+            };
+        },
+        created(){
+            this.blogPage(1);
+            axios.get(`/type/findTypeAndNums`).then(response=>{
+                this.TypeAndNums=response.data
+            });
+            axios.get(`/tag/findTagAndNums`).then(response=>{
+                this.TagAndNums=response.data
+            });
+            axios.get(`/blog/findRecommendBlog`).then(response=>{
+                this.recommendBlog=response.data
+            });
+            axios.get(`/blog/findNewBlog`).then(response=>{
+                this.newBlog=response.data
+            })
+        },
+        filters: {
+            formatDate: function (value) {
+                let date = new Date(value);
+                let y = date.getFullYear();
+                let MM = date.getMonth() + 1;
+                MM = MM < 10 ? ('0' + MM) : MM;
+                let d = date.getDate();
+                d = d < 10 ? ('0' + d) : d;
+                return y + '-' + MM + '-' + d;
+            },
+            htmlToText: function (value) {
+                let input = value;
+                return input.replace(/<(style|script|iframe)[^>]*?>[\s\S]+?<\/\1\s*>/gi,'').replace(/<[^>]+?>/g,'').replace(/\s+/g,' ').replace(/ /g,' ').replace(/>/g,' ').substring(0,250);
+            }
+        },
+        methods:{
+            openBlog(item){
+                location.href=`/blog?id=${item}`;
+            },
+            blogPage(pageNum){
+                axios.get(`/blog/findBlogPage/`+pageNum).then(response=>{
+                    this.pageNum=pageNum
+                    this.blogData=response.data.resultBlogs
+                    this.blogNums=response.data.totalBlog
+                });
+            },
+            handleSelect(key, keyPath) {
+                location.href=`${keyPath}`;
+            },
+            querySearchAsync(queryString, cb) {
+                var restaurants = this.restaurants;
+                var results = queryString ? restaurants.filter(this.createStateFilter(queryString)) : restaurants;
+
+                clearTimeout(this.timeout);
+                this.timeout = setTimeout(() => {
+                    cb(results);
+                }, 3000 * Math.random());
+            },
+            createStateFilter(queryString) {
+                return (state) => {
+                    return (state.value.toLowerCase().indexOf(queryString.toLowerCase()) === 0);
+                };
+            },
+            handleSearch(item) {
+                console.log(item);
+            },
+            search(state){
+                console.log(state);
+            },
+            goType(typeName){
+                location.href=`/types?typeName=`+encodeURI(encodeURI(typeName));
+            },
+            goTag(tagName){
+                location.href=`/tags?tagName=`+encodeURI(encodeURI(tagName));
+            }
+        }
+    })
+</script>
+</html>

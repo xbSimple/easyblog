@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>小兵的博客</title>
+
+
+</head>
+<!-- 引入样式 -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<link rel="stylesheet" href="../../static/css/mycss.css">
+
+<body background="../../static/images/bg.png">
+<div id="app">
+    <el-container>
+        <!--页头-->
+        <el-header>
+            <el-row class="bg-headerfooter">
+                <el-col :xs="24" :xl="4">
+                    <div class="grid-content bg-headerfooter" style="height: 50px;text-align: center;padding-top: 10px">
+                        <font size="5px" color="#808080"><b>管理后台</b></font>
+                    </div>
+                </el-col>
+                <el-col :xs="24" :xl="12">
+                    <div class=" bg-headerfooter" style="height: 50px;">
+                        <el-menu :default-active="activeIndex" class="el-menu-demo bg-headerfooter"
+                                 mode="horizontal" @select="handleSelect">
+                            <el-menu-item index="1"><i class="el-icon-s-home"></i>博客</el-menu-item>
+                            <el-menu-item index="2"><i class="el-icon-menu"></i>分类</el-menu-item>
+                            <el-menu-item index="3"><i class="el-icon-price-tag"></i>标签</el-menu-item>
+                        </el-menu>
+                    </div>
+                </el-col>
+            </el-row>
+        </el-header>
+
+        <!--中间-->
+        <el-main>
+            <div class="login-container">
+                <el-form :model="ruleForm" :rules="rules"
+                         status-icon
+                         ref="ruleForm"
+                         label-position="left"
+                         label-width="0px"
+                         class="demo-ruleForm login-page">
+                    <h3 class="title">系统登录</h3>
+                    <el-form-item prop="username">
+                        <el-input type="text"
+                                  v-model="ruleForm.username"
+                                  auto-complete="off"
+                                  placeholder="用户名"
+                        ></el-input>
+                    </el-form-item>
+                    <el-form-item prop="password">
+                        <el-input type="password"
+                                  v-model="ruleForm.password"
+                                  auto-complete="off"
+                                  placeholder="密码"
+                        ></el-input>
+                    </el-form-item>
+                    <el-form-item style="width:100%;">
+                        <el-button type="primary" style="width:100%;" @click="handleSubmit">登录</el-button>
+                    </el-form-item>
+
+                </el-form>
+            </div>
+        </el-main>
+
+        <!--底部-->
+        <el-footer style="padding-top: 50px">
+            <el-row :xs="24" :xl="5" class="bg-headerfooter" style="padding-top: 50px">
+                <el-col :xs="24" :xl="5" style="text-align: center">
+                    <el-image
+                            style="width: 200px; height: 200px"
+                            :src="wechatImage"
+                            :fit="fit"></el-image>
+                </el-col>
+                <el-col :xs="24" :xl="5" style="text-align: center;color: white">
+                    <h4>最新博客</h4>
+                    <el-container  direction="vertical">
+                        <a href="#" target="_blank" style="text-decoration: none;color: white" v-for="blog in newBlog">{{blog.title}}</a>
+                    </el-container>
+                </el-col>
+                <el-col :xs="24" :xl="5" style="text-align: center;color: white">
+                    <h4>联系我</h4>
+                    <el-container  direction="vertical">
+                        <span style="font-size: 3px">Email:{{email}}</span>
+                        <span style="font-size: 3px">QQ:{{qqnumber}}</span>
+                    </el-container>
+                </el-col>
+                <el-col :xs="24" :xl="9" style="text-align: center;color: white;padding-right: 50px;padding-left: 50px">
+                    <h4>最新博客</h4>
+                    <p>这是我的个人博客，会分享关于编程、写作、思考相关的任何内容，希望可以给来到这儿的人有所帮助...</p>
+                </el-col>
+
+            </el-row>
+
+            <el-row class="bg-headerfooter" style="padding-bottom: 30px;text-align: center;color: white">
+                <el-divider ></el-divider>
+                <strong>Copyright &copy; 2020-2020 xiaobin.</strong> All rights reserved.
+            </el-row>
+        </el-footer>
+    </el-container>
+</div>
+</body>
+<script src="../../static/js/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="../../static/js/axios.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                activeIndex: '1',
+                restaurants: [],
+                state: '',
+                timeout: null,
+                wechatImage: 'https://unsplash.it/400/400?image=1005',
+                avatar: 'https://unsplash.it/100/100?image=1005',
+                fit: 'fill',
+                email:'2217728002@qq.com',
+                qqnumber:2217728002,
+                newBlog:[],
+                logining: false,
+                ruleForm: {
+                    username: '',
+                    password: '',
+                },
+                rules: {
+                    username: [{required: true, message: '请输入用户名', trigger: 'blur'}],
+                    password: [{required: true, message: '请输入密码', trigger: 'blur'}]
+                },
+            };
+        },
+        created(){
+            axios.get(`/blog/findNewBlog`).then(response=>{
+                this.newBlog=response.data
+            });
+        },
+        filters: {
+            formatDate: function (value) {
+                let date = new Date(value);
+                let y = date.getFullYear();
+                let MM = date.getMonth() + 1;
+                MM = MM < 10 ? ('0' + MM) : MM;
+                let d = date.getDate();
+                d = d < 10 ? ('0' + d) : d;
+                let h = date.getHours();
+                h = h < 10 ? ('0' + h) : h;
+                let m = date.getMinutes();
+                m = m < 10 ? ('0' + m) : m;
+                return y + '-' + MM + '-' + d + ' ' + h + ':' +m;
+            }
+        },
+        methods: {
+            handleSubmit(event){
+                this.$refs.ruleForm.validate((valid) => {
+                    if(valid){
+                        axios.post(`/admin/login`,this.ruleForm).then(response=>{
+                            alert(response.data.message);
+                            location.href=`${response.data.url}`
+                        });
+                    }else{
+                        console.log('error submit!');
+                        return false;
+                    }
+                })
+            },
+            handleSelect(key, keyPath) {
+                console.log(key, keyPath);
+            },
+        }
+    })
+</script>
+</html>

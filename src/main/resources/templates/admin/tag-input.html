@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>小兵的博客</title>
+    <link rel="stylesheet" href="../../static/lib/editormd/css/style.css">
+    <link rel="stylesheet" href="../../static/lib/editormd/css/editormd.css">
+</head>
+<!-- 引入样式 -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<link rel="stylesheet" href="../../static/css/mycss.css">
+
+<body background="../../static/images/bg.png">
+<div id="app">
+    <el-container>
+        <!--页头-->
+        <el-header>
+            <el-row class="bg-headerfooter">
+                <el-col :xs="24" :xl="4">
+                    <div class="grid-content bg-headerfooter" style="height: 50px;text-align: center;padding-top: 10px">
+                        <font size="5px" color="#808080"><b>管理后台</b></font>
+                    </div>
+                </el-col>
+                <el-col :xs="24" :xl="12">
+                    <div class=" bg-headerfooter" style="height: 50px;">
+                        <el-menu :default-active="activeIndex" class="el-menu-demo bg-headerfooter"
+                                 mode="horizontal" @select="handleSelect">
+                            <el-menu-item index="1"><a href="/admin/blogs" target="_blank" style="text-decoration:none;"><i class="el-icon-s-home"></i>博客</a></el-menu-item>
+                            <el-menu-item index="2"><a href="/admin/typesm" target="_blank" style="text-decoration:none;"><i class="el-icon-menu"></i>分类</a></el-menu-item>
+                            <el-menu-item index="3"><a href="/admin/tagsm" target="_blank" style="text-decoration:none;"><i class="el-icon-price-tag"></i>标签</a></el-menu-item>
+                        </el-menu>
+                    </div>
+                </el-col>
+                <el-col :xs="24" :xl="8">
+                    <div class="grid-content bg-headerfooter" style="height: 50px;text-align: center;padding-top: 10px">
+                        <el-dropdown @command="handleCommand">
+                            <span style="font-size: 15px">
+                                <el-avatar :size="30" :src="avatar" style="margin-top: 5px;float: left"></el-avatar>
+                                <span style="float: left;margin-left: 15px;margin-top: 10px">肖斌</span>
+                            </span>
+                            <el-dropdown-menu slot="dropdown">
+                                <el-dropdown-item command="loginout">注销</el-dropdown-item>
+                            </el-dropdown-menu>
+                        </el-dropdown>
+                    </div>
+                </el-col>
+            </el-row>
+            <el-row style="background: white">
+                <el-menu :default-active="activeIndex2"  style="float: right;margin-right: 400px" mode="horizontal" @select="handleSelect2">
+                    <el-menu-item index="1">发布</el-menu-item>
+                    <el-menu-item index="2"><a href="/admin/tagsm" target="_blank" style="text-decoration:none;">列表</a></el-menu-item>
+                </el-menu>
+            </el-row>
+        </el-header>
+
+        <!--中间-->
+        <el-main style="padding-top: 200px">
+            <el-row>
+                <el-col :xs="24" :xl="{offset:5,span:14}"  style="padding: 10px">
+                            <el-form  :model="form" ref="form" class="demo-form-inline">
+                                <el-form-item>
+                                    <el-col :xs="2" :xl="1">
+                                       <el-tag style="float: left;height: 40px;font-size: 15px;padding-top: 3px">名称</el-tag>
+                                    </el-col>
+                                    <el-col :xs="22" :xl="23">
+                                       <el-input style="float: left;margin-left: 8px" v-model="form.name" placeholder="标签名称"></el-input>
+                                    </el-col>
+                                </el-form-item>
+                                <el-form-item style="float: right">
+                                    <el-button type="info" onclick="window.history.go(-1)" plain >返回</el-button>
+                                    <el-button type="primary" @click="save('form')" plain >提交</el-button>
+                                </el-form-item>
+                            </el-form>
+                </el-col>
+            </el-row>
+        </el-main>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+
+        <!--底部-->
+        <el-footer style="padding-top: 50px">
+            <el-row :xs="24" :xl="5" class="bg-headerfooter" style="padding-top: 50px">
+                <el-col :xs="24" :xl="5" style="text-align: center">
+                    <el-image
+                            style="width: 200px; height: 200px"
+                            :src="wechatImage"
+                            :fit="fit"></el-image>
+                </el-col>
+                <el-col :xs="24" :xl="5" style="text-align: center;color: white">
+                    <h4>最新博客</h4>
+                    <el-container  direction="vertical">
+                        <a href="#" target="_blank" style="text-decoration: none;color: white" v-for="blog in newBlog">{{blog.title}}</a>
+                    </el-container>
+                </el-col>
+                <el-col :xs="24" :xl="5" style="text-align: center;color: white">
+                    <h4>联系我</h4>
+                    <el-container  direction="vertical">
+                        <span style="font-size: 3px">Email:{{email}}</span>
+                        <span style="font-size: 3px">QQ:{{qqnumber}}</span>
+                    </el-container>
+                </el-col>
+                <el-col :xs="24" :xl="9" style="text-align: center;color: white;padding-right: 50px;padding-left: 50px">
+                    <h4>最新博客</h4>
+                    <p>这是我的个人博客，会分享关于编程、写作、思考相关的任何内容，希望可以给来到这儿的人有所帮助...</p>
+                </el-col>
+
+            </el-row>
+
+            <el-row class="bg-headerfooter" style="padding-bottom: 30px;text-align: center;color: white">
+                <el-divider ></el-divider>
+                <strong>Copyright &copy; 2020-2020 xiaobin.</strong> All rights reserved.
+            </el-row>
+        </el-footer>
+    </el-container>
+</div>
+</body>
+<script src="../../static/js/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="../../static/js/jquery.min.js"></script>
+<script src="../../static/lib/editormd/editormd.min.js"></script>
+<script src="../../static/js/axios.js"></script>
+<script src="../../static/js/util.js"></script>
+
+<script>
+
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                activeIndex: '3',
+                activeIndex2: '1',
+                wechatImage: 'https://unsplash.it/400/400?image=1005',
+                avatar: 'https://unsplash.it/100/100?image=1005',
+                fit: 'fill',
+                form:{
+                    id:'',
+                    name: '',
+                },
+                email:'2217728002@qq.com',
+                qqnumber:2217728002,
+                newBlog:[],
+                editTagId:''
+            };
+        },
+        created: function() {
+            this.editTagId=getQueryString("tagId");
+            if (this.editTagId != null){
+                axios.get(`/tag/findTagById?id=${this.editTagId}`).then(response=>{
+                    this.form=response.data
+                })
+            };
+            axios.get(`/blog/findNewBlog`).then(response=>{
+                this.newBlog=response.data
+            });
+        },
+        methods: {
+            handleSelect(key, keyPath) {
+                console.log(key, keyPath);
+            },
+            handleSelect2(key, keyPath) {
+                console.log(key, keyPath);
+            },
+            handleCommand(command) {
+                this.$message('click on item ' + command);
+            },
+            save(form) {
+                this.$refs[form].validate((valid) => {
+                    if (valid) {
+                        axios.post(`/tag/addTag`,this.form).then(response=>{
+                            location.href=`/admin/tagsm`;
+                        });
+                        alert('submit!');
+                    } else {
+                        console.log('error submit!!');
+                        return false;
+                    }
+                });
+            },
+        }
+    })
+</script>
+</html>

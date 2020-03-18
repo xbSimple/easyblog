@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>小兵的博客</title>
+
+
+</head>
+<!-- 引入样式 -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<link rel="stylesheet" href="../static/css/mycss.css">
+
+<body background="../static/images/bg.png">
+<div id="app">
+<el-container>
+<!--页头-->
+    <el-header>
+        <el-row class="bg-headerfooter">
+            <el-col :xs="24" :xl="4"><div class="grid-content bg-headerfooter"  style="height: 50px;text-align: center;padding-top: 10px">
+                <font size="5px" color="#808080"><b>Blog</b></font>
+                </div>
+            </el-col>
+            <el-col :xs="24" :xl="12"><div class="bg-headerfooter" style="height: 50px;">
+                <el-menu :default-active="activeIndex" class="el-menu-demo bg-headerfooter" mode="horizontal" @select="handleSelect">
+                    <el-menu-item index="/index"><i class="el-icon-s-home"></i>首页</el-menu-item>
+                    <el-menu-item index="/types"><i class="el-icon-menu"></i>分类</el-menu-item>
+                    <el-menu-item index="/tags"><i class="el-icon-price-tag"></i>标签</el-menu-item>
+                    <el-menu-item index="/archives"><i class="el-icon-document"></i>归档</el-menu-item>
+                    <el-menu-item index="/about"><i class="el-icon-info"></i>关于我</el-menu-item>
+                </el-menu>
+            </div>
+            </el-col>
+            <el-col :xs="24" :xl="8"  ><div class="grid-content bg-headerfooter" style="height: 50px;text-align: center;padding-top: 10px">
+                <el-autocomplete
+                        v-model="state"
+                        :fetch-suggestions="querySearchAsync"
+                        placeholder="请输入内容"
+                        @select="handleSearch"
+                        class="grid-content bg-black"
+                        suffix-icon="el-icon-search"
+                        @change="search"
+                ></el-autocomplete>
+            </div></el-col>
+        </el-row>
+    </el-header>
+
+    <!--中间-->
+    <el-main  style="padding-top: 150px">
+        <el-row>
+            <el-col :xs="24" :xl="{offset:5,span:14}">
+                <el-row class="bg-papayawhip" style="border: 1px solid grey">
+                    <el-header style="border: 1px solid grey;padding-top: 10px">
+                        <font size="5px" color="#808080" ><b>归档</b></font>
+                        <span style="float: right">共<font size="5px" color="orange">{{blogNums}}</font>篇博客</span>
+                    </el-header>
+                </el-row>
+                <div v-for="dates in dateBlog.yearBlogList">
+                    <el-row style="text-align: center;margin-top: 50px">
+                        <h2>{{dates.year | formatDateYear}}</h2>
+                    </el-row>
+                    <el-row v-for="blog in dates.blogList" class="bg-papayawhip" style="padding: 10px;border: 1px solid grey;border-radius: 4px">
+                        <span><i class="el-icon-paperclip"></i><el-link :underline="false" @click="openBlog(blog.id)" target="_blank" style="color: black;font-size: 15px">{{blog.title}}</el-link></span>
+                        <el-tag type="success" size="mini" effect="plain">{{blog.createTime | formatDateMD}}</el-tag>
+                        <el-tag style="float: right" size="mini" type="danger" effect="plain">{{blog.flag}}</el-tag>
+                    </el-row>
+                </div>
+            </el-col>
+        </el-row>
+
+
+    </el-main>
+
+    <!--底部-->
+    <el-footer style="padding-top: 50px">
+        <el-row :xs="24" :xl="5" class="bg-headerfooter" style="padding-top: 50px">
+            <el-col :xs="24" :xl="5" style="text-align: center">
+                <el-image
+                        style="width: 200px; height: 200px"
+                        :src="wechatImage"
+                        :fit="fit"></el-image>
+            </el-col>
+            <el-col :xs="24" :xl="5" style="text-align: center;color: white">
+                <h4>最新博客</h4>
+                <el-container  direction="vertical">
+                    <el-link :underline="false" @click="openBlog(blog.id)"  target="_blank" style="text-decoration: none;color: white" v-for="blog in newBlog">{{blog.title}}</el-link>
+                </el-container>
+            </el-col>
+            <el-col :xs="24" :xl="5" style="text-align: center;color: white">
+                <h4>联系我</h4>
+                <el-container  direction="vertical">
+                    <span style="font-size: 3px">Email:{{email}}</span>
+                    <span style="font-size: 3px">QQ:{{qqnumber}}</span>
+                </el-container>
+            </el-col>
+            <el-col :xs="24" :xl="9" style="text-align: center;color: white;padding-right: 50px;padding-left: 50px">
+                <h4>最新博客</h4>
+                <p>这是我的个人博客，会分享关于编程、写作、思考相关的任何内容，希望可以给来到这儿的人有所帮助...</p>
+            </el-col>
+
+        </el-row>
+
+        <el-row class="bg-headerfooter" style="padding-bottom: 30px;text-align: center;color: white">
+            <el-divider ></el-divider>
+            <strong>Copyright &copy; 2020-2020 xiaobin.</strong> All rights reserved.
+        </el-row>
+    </el-footer>
+</el-container>
+</div>
+</body>
+<script src="../static/js/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="../static/js/axios.js"></script>
+
+<script>
+    new Vue({
+        el:'#app',
+        data(){
+            return {
+                activeIndex: '/archives',
+                state: '',
+                timeout:  null,
+                restaurants:[],
+                blogNums: 10,
+                wechatImage: 'https://unsplash.it/400/400?image=1005',
+                blogimage:'https://unsplash.it/1000/600?image=1005',
+                fit:'fill',
+                email:'2217728002@qq.com',
+                qqnumber:2217728002,
+                newBlog:[],
+                dateBlog:[]
+            };
+        },
+        created(){
+            axios.get(`/blog/findNewBlog`).then(response=>{
+                this.newBlog=response.data
+            });
+            axios.get(`/blog/findBlogByDate`).then(response=>{
+                this.dateBlog=response.data
+                this.blogNums=this.dateBlog.total
+            })
+        },
+        filters: {
+            formatDate: function (value) {
+                let date = new Date(value);
+                let y = date.getFullYear();
+                let MM = date.getMonth() + 1;
+                MM = MM < 10 ? ('0' + MM) : MM;
+                let d = date.getDate();
+                d = d < 10 ? ('0' + d) : d;
+                return y + '-' + MM + '-' + d;
+            },
+            formatDateYear: function (value) {
+                let date = new Date(value);
+                let y = date.getFullYear();
+                return y;
+            },
+            formatDateMD: function (value) {
+                let date = new Date(value);
+                let MM = date.getMonth() + 1;
+                MM = MM < 10 ? ('0' + MM) : MM;
+                let d = date.getDate();
+                d = d < 10 ? ('0' + d) : d;
+                return MM + '月' + d + '日';
+            },
+        },
+        methods:{
+            openBlog(item){
+                location.href=`/blog?id=${item}`;
+            },
+            handleSelect(key, keyPath) {
+                location.href=`${keyPath}`;
+            },
+            querySearchAsync(queryString, cb) {
+                var restaurants = this.restaurants;
+                var results = queryString ? restaurants.filter(this.createStateFilter(queryString)) : restaurants;
+
+                clearTimeout(this.timeout);
+                this.timeout = setTimeout(() => {
+                    cb(results);
+                }, 3000 * Math.random());
+            },
+            createStateFilter(queryString) {
+                return (state) => {
+                    return (state.value.toLowerCase().indexOf(queryString.toLowerCase()) === 0);
+                };
+            },
+            handleSearch(item) {
+                console.log(item);
+            },
+            search(state){
+
+            }
+        }
+    })
+</script>
+</html>

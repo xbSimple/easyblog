@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>小兵的博客</title>
+
+
+</head>
+<!-- 引入样式 -->
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<link rel="stylesheet" href="../static/css/mycss.css">
+
+<body background="../static/images/bg.png">
+<div id="app">
+<el-container>
+<!--页头-->
+    <el-header>
+        <el-row class="bg-headerfooter">
+            <el-col :xs="24" :xl="4"><div class="grid-content bg-headerfooter"  style="height: 50px;text-align: center;padding-top: 10px">
+                <font size="5px" color="#808080"><b>Blog</b></font>
+                </div>
+            </el-col>
+            <el-col :xs="24" :xl="12"><div class="bg-headerfooter" style="height: 50px;">
+                <el-menu :default-active="activeIndex" class="el-menu-demo bg-headerfooter" mode="horizontal" @select="handleSelect">
+                    <el-menu-item index="/index"><i class="el-icon-s-home"></i>首页</el-menu-item>
+                    <el-menu-item index="/types"><i class="el-icon-menu"></i>分类</el-menu-item>
+                    <el-menu-item index="/tags"><i class="el-icon-price-tag"></i>标签</el-menu-item>
+                    <el-menu-item index="/archives"><i class="el-icon-document"></i>归档</el-menu-item>
+                    <el-menu-item index="/about"><i class="el-icon-info"></i>关于我</el-menu-item>
+                </el-menu>
+            </div>
+            </el-col>
+            <el-col :xs="24" :xl="8"  ><div class="grid-content bg-headerfooter" style="height: 50px;text-align: center;padding-top: 10px">
+                <el-autocomplete
+                        v-model="state"
+                        :fetch-suggestions="querySearchAsync"
+                        placeholder="请输入内容"
+                        @select="handleSearch"
+                        class="grid-content bg-black"
+                        suffix-icon="el-icon-search"
+                        @change="search"
+                ></el-autocomplete>
+            </div></el-col>
+        </el-row>
+    </el-header>
+
+    <!--中间-->
+    <el-main  style="padding-top: 150px">
+        <el-row>
+            <el-col :xs="24" :xl="{offset:5,span:14}">
+                <el-row class="bg-papayawhip" style="border: 1px solid grey">
+                    <el-header style="border: 1px solid grey;padding-top: 10px">
+                        <div  style="text-align: center;">
+                            <img src="https://unsplash.it/100/100?image=1005" alt="" style="border-radius: 4px;width: 30px;float: left">
+                            <div class="grid-content" style="float: left;padding-left: 10px;padding-top: 5px;font-size: 1px"><b>{{blog.nickName}}</b></div>
+                            <div class="grid-content" style="float: left;padding-left: 10px;padding-top: 5px;font-size: 1px">更于：{{blog.updateTime | formatDate}}   </div>
+                            <div class="grid-content" style="float: left;padding-left: 10px;padding-top: 5px;font-size: 1px">浏览：{{blog.views==null?'0':blog.views}}次</div>
+                        </div>
+                    </el-header>
+                    <el-main style="border: 1px solid grey;text-align: center">
+                            <el-image :src="blogImage" alt="" :fit="fit" style="width: 1000px;height: 600px;border-radius: 4px"></el-image>
+                    </el-main>
+                    <el-main style="border: 1px solid grey">
+                        <el-tag type="danger" style="float: right">{{blog.flag}}</el-tag>
+                        <el-row style="padding-top: 100px">
+                            <h2 style="text-align: center">{{blog.title}}</h2>
+                            <div v-html="blog.content">
+                            </div>
+                        </el-row>
+                        <el-row>
+                        <el-tag type="success" style="float: left;margin-left: 50px;margin-top: 20px">{{blog.typeName}}</el-tag>
+                        </el-row>
+                        <el-row style="text-align: center;margin-top: 50px" v-if="blog.appreciation==1">
+                            <el-popover
+                                    placement="bottom"
+                                    title="尽情打赏我吧！"
+                                    width="410"
+                                    trigger="click"
+                                    style="text-align: center">
+                                <div>
+                                    <el-image :src="wechatpay" alt="" :fit="fit" style="width: 200px;height: 200px;border-radius: 4px;float: left"></el-image>
+                                    <el-image :src="zhifupay" alt="" :fit="fit" style="width: 200px;height: 200px;border-radius: 4px;float: right"></el-image>
+                                </div>
+                                <el-button slot="reference">赞赏</el-button>
+                            </el-popover>
+                        </el-row>
+                    </el-main>
+                    <el-main style="border: 1px solid grey;background: skyblue">
+                        <div>
+                            <ul style="float: left;font-size: 15px;line-height: 40px">
+                                <li>作者：{{blog.nickName}}（联系作者）</li>
+                                <li>发表时间：{{blog.createTime | formatDate}}</li>
+                                <li>版权声明：{{blog.shareStatement==1?'可转载':'不可转载'}}</li>
+                                <li v-if="blog.shareStatement==1">公众号转载：请在文末添加作者公众号二维码</li>
+                            </ul>
+                            <el-image :src="wechatImage" alt="" :fit="fit" style="width: 200px;height: 200px;border-radius: 4px;float: right"></el-image>
+                        </div>
+                    </el-main>
+                    <el-main v-if="blog.commentabled==1" style="border: 1px solid grey">
+                        <el-container  style="border: 1px solid grey">
+                            <el-header>
+                                <h3>评论</h3>
+                            </el-header>
+                            <el-divider></el-divider>
+                            <el-main>
+                                <!--第一评论-->
+                                <!--<el-row v-for="(comment,index) in comments" :key="index">-->
+                                    <!--<el-col :span="1">-->
+                                        <!--<img src="https://unsplash.it/100/100?image=1005" alt="" style="border-radius: 4px;width: 30px;float: left">-->
+                                    <!--</el-col>-->
+                                    <!--<el-col :span="23">-->
+                                        <!--<el-row>-->
+                                            <!--<div>-->
+                                                <!--<div class="grid-content" style="float: left;padding-left: 10px;padding-top: 5px;font-size: 1px"><b>肖斌</b></div>-->
+                                                <!--<div class="grid-content" style="float: left;padding-left: 10px;padding-top: 5px;font-size: 1px">2020-03-02 09:52</div>-->
+                                            <!--</div>-->
+                                        <!--</el-row>-->
+                                        <!--<el-row>-->
+                                            <!--<div style="font-size: 2px;padding-left: 10px">评论内容水电费安利护肤的工商卡接电话付款加速度后方可进来是的咖啡机很深刻的交付货款啥电话费开始交电话费看见爱上还贷款</div>-->
+                                        <!--</el-row>-->
+                                        <!--<el-row>-->
+                                            <!--<el-button type="text" style="font-size: 1px;padding-left: 10px">回复</el-button>-->
+                                        <!--</el-row>-->
+                                        <!--&lt;!&ndash;评论回复&ndash;&gt;-->
+                                        <!--<div v-if="comment.commentChildren">-->
+                                            <!--<el-row :comment="comment.commentChildren" style="margin-left: 10px">-->
+                                                <!--<el-col :span="1">-->
+                                                    <!--<img src="https://unsplash.it/100/100?image=1005" alt="" style="border-radius: 4px;width: 30px;float: left">-->
+                                                <!--</el-col>-->
+                                                <!--<el-col :span="23">-->
+                                                    <!--<el-row>-->
+                                                        <!--<div>-->
+                                                            <!--<div class="grid-content" style="float: left;padding-left: 10px;padding-top: 5px;font-size: 1px"><b>肖斌</b></div>-->
+                                                            <!--<div class="grid-content" style="float: left;padding-left: 10px;padding-top: 5px;font-size: 1px">2020-03-02 09:52</div>-->
+                                                        <!--</div>-->
+                                                    <!--</el-row>-->
+                                                    <!--<el-row>-->
+                                                        <!--<div style="font-size: 2px;padding-left: 10px">评论内容</div>-->
+                                                    <!--</el-row>-->
+                                                    <!--<el-row>-->
+                                                        <!--<el-button type="text" style="font-size: 1px;padding-left: 10px">回复</el-button>-->
+                                                    <!--</el-row>-->
+                                                <!--</el-col>-->
+                                            <!--</el-row>-->
+                                        <!--</div>-->
+                                    <!--</el-col>-->
+                                <!--</el-row>-->
+                                <template>
+                                    <div>
+                                        <comment :comments="comments"></comment>
+                                    </div>
+                                </template>
+                            </el-main>
+                        </el-container>
+                        <el-container  style="border: 1px solid grey;padding: 10px">
+                            <el-header style="height: 20px">
+                                <el-button id="bt-commentAll" class="button-display-none" @click="commentAll" style="margin-left: 10px;font-size: 2px" type="text">点击评论博主</el-button>
+                            </el-header>
+                            <el-main>
+                            <el-form ref="form" :rules="rules"  :model="form">
+                                <el-input id="commentPId" v-model="form.parentId" style="display: none"></el-input>
+                                <el-form-item prop="content">
+                                    <el-col :xs="24" :xl="24">
+                                        <el-input id="commentText" type="textarea" v-model="form.content" placeholder="请输入评论信息..."></el-input>
+                                    </el-col>
+                                </el-form-item>
+                                <el-form-item >
+                                    <el-row :gutter="40" >
+                                        <el-col :xs="8" :xl="8">
+                                            <el-form-item prop="nickname" >
+                                                <el-input v-model="form.nickname" style="float: left" placeholder="昵称" prefix-icon="el-icon-user-solid"></el-input>
+                                            </el-form-item>
+                                        </el-col>
+                                        <el-col :xs="8" :xl="8">
+                                            <el-form-item prop="email">
+                                                <el-input v-model="form.email" style="float: left" placeholder="邮箱" prefix-icon="el-icon-message"></el-input>
+                                            </el-form-item>
+                                        </el-col>
+                                        <el-col :xs="8" :xl="8">
+                                            <el-form-item>
+                                                <el-button type="primary" @click="onSubmit" style="float: left"><i class="el-icon-edit"></i>发布</el-button>
+                                            </el-form-item>
+                                        </el-col>
+                                    </el-row>
+                                </el-form-item>
+                            </el-form>
+                            </el-main>
+                        </el-container>
+                    </el-main>
+                </el-row>
+            </el-col>
+        </el-row>
+    </el-main>
+
+    <!--底部-->
+    <el-footer>
+        <el-row :xs="24" :xl="5" class="bg-headerfooter" style="padding-top: 50px">
+            <el-col :xs="24" :xl="5" style="text-align: center">
+                <el-image
+                        style="width: 200px; height: 200px"
+                        :src="wechatImage"
+                        :fit="fit"></el-image>
+            </el-col>
+            <el-col :xs="24" :xl="5" style="text-align: center;color: white">
+                <h4>最新博客</h4>
+                <el-container  direction="vertical">
+                    <el-link :underline="false" @click="openBlog(blog.id)"  target="_blank" style="text-decoration: none;color: white" v-for="(blog,index) in newBlog" :key="index">{{blog.title}}</el-link>
+                </el-container>
+            </el-col>
+            <el-col :xs="24" :xl="5" style="text-align: center;color: white">
+                <h4>联系我</h4>
+                <el-container  direction="vertical">
+                    <span style="font-size: 3px">Email:{{email}}</span>
+                    <span style="font-size: 3px">QQ:{{qqnumber}}</span>
+                </el-container>
+            </el-col>
+            <el-col :xs="24" :xl="9" style="text-align: center;color: white;padding-right: 50px;padding-left: 50px">
+                <h4>最新博客</h4>
+                <p>这是我的个人博客，会分享关于编程、写作、思考相关的任何内容，希望可以给来到这儿的人有所帮助...</p>
+            </el-col>
+
+        </el-row>
+
+        <el-row class="bg-headerfooter" style="padding-bottom: 30px;text-align: center;color: white">
+            <el-divider ></el-divider>
+            <strong>Copyright &copy; 2020-2020 xiaobin.</strong> All rights reserved.
+        </el-row>
+    </el-footer>
+</el-container>
+</div>
+</body>
+<script src="../static/js/vue.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="../static/js/axios.js"></script>
+<script src="../static/js/util.js"></script>
+<script src="../static/js/jquery.min.js"></script>
+
+<script>
+    Vue.component('comment', {
+        template: `
+            <div>
+               <el-row v-for="(comment,index) in comments" :key="index">
+                    <el-col :span="1">
+                        <img src="https://unsplash.it/100/100?image=1005" alt="" style="border-radius: 4px;width: 30px;float: left">
+                    </el-col>
+                    <el-col :span="23">
+                        <el-row>
+                            <div>
+                                <div class="grid-content" style="float: left;padding-left: 10px;padding-top: 5px;font-size: 1px"><b>{{comment.nickname}}</b></div>
+                                <div class="grid-content" style="float: left;padding-left: 10px;padding-top: 5px;font-size: 1px">{{comment.createTime | formatDate}}</div>
+                            </div>
+                        </el-row>
+                        <el-row>
+                            <div style="font-size: 2px;padding-left: 10px">{{comment.content}}</div>
+                        </el-row>
+                        <el-row>
+                            <el-button type="text" @click="setFocus(comment)" style="font-size: 1px;padding-left: 10px">回复</el-button>
+                            <!--<el-button :id="forId1(index)" @click="displayComment(index)"  style="margin-left: 10px;font-size: 2px" type="text">点击展开更多<i class="el-icon-bottom"></i></el-button>-->
+                        </el-row>
+                        <comment :id="index" :comments="comment.commentChildren"></comment>
+                        <!--<el-button :id="forId2(index)" @click="hideComment(index)" class="button-display-none" style="margin-left: 10px;font-size: 2px" type="text">点击隐藏<i class="el-icon-top"></i></el-button class>-->
+                    </el-col>
+                </el-row>
+            </div>`,
+        props: ['comments'],
+        filters: {
+            formatDate: function (value) {
+                let date = new Date(value);
+                let y = date.getFullYear();
+                let MM = date.getMonth() + 1;
+                MM = MM < 10 ? ('0' + MM) : MM;
+                let d = date.getDate();
+                d = d < 10 ? ('0' + d) : d;
+                let h = date.getHours();
+                h = h < 10 ? ('0' + h) : h;
+                let m = date.getMinutes();
+                m = m < 10 ? ('0' + m) : m;
+                return y + '-' + MM + '-' + d + ' ' + h + ':' +m;
+            },
+        },
+        methods:{
+            setFocus(comment){
+                document.getElementById('commentText').focus();
+                document.getElementById('commentPId').value=comment.id;
+                // localStorage.setItem("comment",comment.id);
+                document.getElementById('commentText').value='@'+comment.nickname+':';
+                $('#bt-commentAll').removeClass('button-display-none');
+            },
+            forId1(index){
+                return "bn-"+index;
+            },
+            forId2(index){
+                return "bd-"+index;
+            },
+            displayComment(index){
+                $('#'+index).removeClass('button-display-none');
+            },
+            hideComment(index){
+
+            }
+        }
+    });
+    new Vue({
+        el:'#app',
+        data(){
+            return {
+                activeIndex: '/index',
+                activeIndex2: '1',
+                state: '',
+                restaurants:[],
+                timeout:  null,
+                blogNums: 10,
+                wechatImage: 'https://unsplash.it/400/400?image=1005',
+                blogImage:'https://unsplash.it/1000/600?image=1005',
+                fit:'fill',
+                wechatpay:'https://unsplash.it/400/400?image=1005',
+                zhifupay:'https://unsplash.it/400/400?image=1005',
+                form:{
+                    parentId:0,
+                    content:'',
+                    nickname:'',
+                    email:'',
+                    blogId:''
+                },
+                rules: {
+                    content: [
+                        {required: true, message: '评论不能为空', trigger: 'blur'},
+                    ],
+                    nickname: [
+                        {required: true, message: '请输入昵称', trigger: 'blur'},
+                    ],
+                    email:[
+                        { required: true, message: '请输入邮箱地址', trigger: 'blur' },
+                        { type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change'] }]
+                },
+                email:'2217728002@qq.com',
+                qqnumber:2217728002,
+                blog:{},
+                newBlog:[],
+                blogId:'',
+                comments:'',
+                comment1:''
+            };
+        },
+        created(){
+            this.blogId=getQueryString("id");
+            axios.get(`/blog/findBlogById?id=${this.blogId}`).then(response=>{
+               this.blog=response.data;
+               this.form.blogId=this.blog.id;
+               this.blogImage=this.blog.firstPicture
+            });
+            this.getComment();
+            axios.get(`/blog/findNewBlog`).then(response=>{
+                this.newBlog=response.data
+            })
+        },
+        filters: {
+            formatDate: function (value) {
+                let date = new Date(value);
+                let y = date.getFullYear();
+                let MM = date.getMonth() + 1;
+                MM = MM < 10 ? ('0' + MM) : MM;
+                let d = date.getDate();
+                d = d < 10 ? ('0' + d) : d;
+                let h = date.getHours();
+                h = h < 10 ? ('0' + h) : h;
+                let m = date.getMinutes();
+                m = m < 10 ? ('0' + m) : m;
+                return y + '-' + MM + '-' + d + ' ' + h + ':' +m;
+            },
+        },
+
+        methods:{
+            getComment(){
+                axios.get(`/comment/findAllCommentById?blogId=${this.blogId}`).then(response=>{
+                    this.comments=response.data;
+                });
+            },
+            openBlog(item){
+                location.href=`/blog?id=${item}`;
+            },
+            handleSelect(key, keyPath) {
+                location.href=`${keyPath}`;
+            },
+            onSubmit() {
+                // this.comment1 = localStorage.getItem("comment");
+                // localStorage.removeItem("comment");
+                this.form.parentId=document.getElementById('commentPId').value;
+                axios.post(`comment/addComment`,this.form).then(response=>{
+                    this.getComment();
+                });
+                console.log(this.form);
+            },
+            querySearchAsync(queryString, cb) {
+                let restaurants = this.restaurants;
+                let results = queryString ? restaurants.filter(this.createStateFilter(queryString)) : restaurants;
+
+                clearTimeout(this.timeout);
+                this.timeout = setTimeout(() => {
+                    cb(results);
+                }, 3000 * Math.random());
+            },
+            createStateFilter(queryString) {
+                return (state) => {
+                    return (state.value.toLowerCase().indexOf(queryString.toLowerCase()) === 0);
+                };
+            },
+            handleSearch(item) {
+                console.log(item);
+            },
+            search(state){
+
+            },
+            commentAll(){
+                this.form.parentId=0;
+                document.getElementById('commentText').focus();
+                document.getElementById('commentText').value='';
+                this.form.content='';
+                $('#bt-commentAll').addClass('button-display-none');
+            }
+
+        }
+    })
+</script>
+</html>

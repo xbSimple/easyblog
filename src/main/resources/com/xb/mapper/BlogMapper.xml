@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xb.mapper.BlogMapper">
+
+    <select id="findResultBlog" resultType="com.xb.entity.result.ResultBlog">
+        SELECT b.*,t.name as typeName,u.nickname as nickName FROM t_blog b LEFT JOIN t_type t ON b.typeId=t.id LEFT JOIN t_user u ON b.userId=u.id WHERE published=1
+    </select>
+
+    <select id="findAllResultBlog" resultType="com.xb.entity.result.ResultBlog">
+        SELECT b.*,t.name as typeName,u.nickname as nickName FROM t_blog b LEFT JOIN t_type t ON b.typeId=t.id LEFT JOIN t_user u ON b.userId=u.id
+    </select>
+    
+    <select id="searchBlog" resultType="com.xb.entity.result.ResultBlog">
+        SELECT b.*,t.name as typeName,u.nickname as nickName FROM t_blog b LEFT JOIN t_type t ON b.typeId=t.id LEFT JOIN t_user u ON b.userId=u.id
+        <where>
+            <if test="title != null"  >
+                AND b.title like #{title}
+            </if>
+            <if test="typeId != null and typeId != 0"  >
+                AND b.typeId = #{typeId}
+            </if>
+            <if test="recommend == 1"  >
+                AND b.recommend = #{recommend}
+            </if>
+        </where>
+    </select>
+
+    <insert id="addBlog" parameterType="com.xb.entity.Blog">
+        <selectKey keyProperty="id" resultType="Long" order="AFTER">
+            SELECT LAST_INSERT_ID() AS ID
+        </selectKey>
+        INSERT INTO t_blog (title,content,firstPicture,flag,appreciation,shareStatement,commentabled,published,recommend,createTime,updateTime,typeId,userId,contentText)
+        values (#{title},#{content},#{firstPicture},#{flag},#{appreciation},#{shareStatement},#{commentabled},#{published},
+        #{recommend},#{createTime},#{updateTime},#{typeId},#{userId},#{contentText})
+    </insert>
+
+    <update id="updateBlog" parameterType="com.xb.entity.Blog">
+        UPDATE t_blog SET title=#{title},content=#{content},firstPicture=#{firstPicture},flag=#{flag},appreciation=#{appreciation},shareStatement=#{shareStatement},commentabled=#{commentabled},
+            published=#{published},recommend=#{recommend},updateTime=#{updateTime},typeId=#{typeId},userId=#{userId},contentText=#{contentText} WHERE id=#{id}
+    </update>
+</mapper>
